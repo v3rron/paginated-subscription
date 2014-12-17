@@ -1,7 +1,11 @@
 Package.describe({
-  summary: "A paginated subscription; views a subset of a subscription."
+  name: 'percolate:paginated-subscription',
+  summary: "Easily paginate a subscription that takes a limit parameter.",
+  version: "0.2.2",
+  git: "https://github.com/percolatestudio/paginated-subscription.git"
 });
 
-Package.on_use(function (api, where) {
-  api.add_files('paginated_subscription.js', 'client');
+Package.onUse(function (api, where) {
+  api.versionsFrom("METEOR@0.9.0");
+  api.addFiles('paginated_subscription.js', 'client');
 });
