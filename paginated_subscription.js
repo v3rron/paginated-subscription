@@ -1,9 +1,16 @@
 PaginatedSubscriptionHandle = function(perPage) {
-  this.perPage = perPage;
-  this._limit = perPage;
-  this._limitListeners = new Deps.Dependency();
-  this._loaded = 0;
-  this._loadedListeners = new Deps.Dependency();
+  var self = this;
+  self.perPage = perPage;
+  self._limit = perPage;
+  self._limitListeners = new Tracker.Dependency();
+  self._loaded = 0;
+  self._loadedListeners = new Tracker.Dependency();
+  
+  console.log('HERE')
+  Tracker.onInvalidate(function() {
+    console.log('IN HERE')
+    self._stop();
+  });
 }
 
 PaginatedSubscriptionHandle.prototype.loaded = function() {
@@ -40,6 +47,11 @@ PaginatedSubscriptionHandle.prototype.reset = function() {
   this._limitListeners.changed();
 }
 
+PaginatedSubscriptionHandle.prototype._stop = function() {
+  this._limitListeners.changed();
+  this._loadedListeners.changed();
+}
+
 
 Meteor.subscribeWithPagination = function (/*name, arguments, perPage */) {
   var args = Array.prototype.slice.call(arguments, 0);
@@ -53,8 +65,9 @@ Meteor.subscribeWithPagination = function (/*name, arguments, perPage */) {
   }
   
   var handle = new PaginatedSubscriptionHandle(perPage);
+  handle._args = args;
   
-  var argAutorun = Meteor.autorun(function() {
+  var argAutorun = Tracker.autorun(function() {
     var ourArgs = _.map(args, function(arg) {
       return _.isFunction(arg) ? arg() : arg;
     });
@@ -65,14 +78,17 @@ Meteor.subscribeWithPagination = function (/*name, arguments, perPage */) {
     
     // whenever the sub becomes ready, we are done. This may happen right away
     // if we are re-subscribing to an already ready subscription.
-    Meteor.autorun(function() {
+    Tracker.autorun(function() {
       if (subHandle.ready())
         handle.done();
     });
   });
   
   // this will stop the subHandle, and the done autorun
-  handle.stop = _.bind(argAutorun.stop, argAutorun);
+  handle.stop = function() {
+    argAutorun.stop();
+    handle._stop();
+  };
   
   return handle;
 }
