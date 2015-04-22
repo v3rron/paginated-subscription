@@ -50,6 +50,6 @@ Contributions are heavily encouraged. The obvious things to fix are:
 
 Please contact me if you want to have a go at these and I'll be happy to help in what ways I can.
 
-## LICENSE
+## License 
 
-MIT (c) Tom Coleman
+MIT. (c) Percolate Studio, maintained by Tom Coleman (@tmeasday).
