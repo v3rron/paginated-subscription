@@ -1,0 +1,23 @@
+<head>
+  <title>simple</title>
+</head>
+
+<body>
+  <h1>Welcome to Meteor!</h1>
+
+  {{> posts}}
+</body>
+
+<template name="posts">
+  {{#each posts}}
+    <p>Post # {{rank}}</p>
+  {{/each}}
+
+  {{#if loading}}
+    <p>Loading...</p>
+  {{else}}
+    {{#if hasMore}}
+      <p><a class="js-load-more">More</a></p>
+    {{/if}}
+  {{/if}}
+</template>
