@@ -1,7 +1,7 @@
 Package.describe({
-  name: 'percolate:paginated-subscription',
-  summary: "Easily paginate a subscription that takes a limit parameter.",
-  version: "0.2.4",
+  name: 'verron:paginated-subscription',
+  summary: "Easily paginate a subscription that takes a limit parameter and initial number of pages.",
+  version: "0.3.0",
   git: "https://github.com/percolatestudio/paginated-subscription.git"
 });
 

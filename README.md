@@ -2,6 +2,20 @@
 
 This package is an experiment that adds pagination to Meteor's standard subscriptions. It's a byproduct of the [Telescope project](http://telesc.pe).
 
+## Modified in this package
+Now you can add ``initialPages`` option in case if you want to load different amount of documents for the first subscribe
+
+One more API function added ``handle.pagesLoaded`` in order to see how many pages are currently loaded
+
+Removed loaded() function as it didn't make sense (it didn't actually count how many documents were loaded, but was just equal to current limit )
+
+Example:
+
+````js
+// Last argument is optional
+var handle = Meteor.subscribeWithPagination('posts', 10, 2);
+````
+
 ## Installation
 
 Install via  [Meteorite](https://github.com/oortcloud/meteorite/):

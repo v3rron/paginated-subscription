@@ -1,23 +1,27 @@
-PaginatedSubscriptionHandle = function(perPage) {
+PaginatedSubscriptionHandle = function(perPage, initialPages) {
   this.perPage = perPage;
-  this._limit = perPage;
-  this._limitListeners = new Deps.Dependency();
-  this._loaded = 0;
-  this._loadedListeners = new Deps.Dependency();
+  this.initialPages = initialPages || 1;
+  this._pagesLoaded = this.initialPages;
+  this._pagesLoadedListeners = new Tracker.Dependency();
+  this._limit = this.perPage;
+  this._limitListeners = new Tracker.Dependency();
+  this._ready = false;
+  this._readyListeners = new Tracker.Dependency();
 }
 
-PaginatedSubscriptionHandle.prototype.loaded = function() {
-  this._loadedListeners.depend();
-  return this._loaded;
+PaginatedSubscriptionHandle.prototype.ready = function() {
+  this._readyListeners.depend();
+  return this._ready;
+}
+
+PaginatedSubscriptionHandle.prototype.pagesLoaded = function() {
+  this._pagesLoadedListeners.depend();
+  return this._pagesLoaded;
 }
 
 PaginatedSubscriptionHandle.prototype.limit = function() {
   this._limitListeners.depend();
   return this._limit;
-}
-
-PaginatedSubscriptionHandle.prototype.ready = function() {
-  return this.loaded() === this.limit();
 }
 
 // deprecated
@@ -27,32 +31,46 @@ PaginatedSubscriptionHandle.prototype.loading = function() {
 
 PaginatedSubscriptionHandle.prototype.loadNextPage = function() {
   this._limit += this.perPage;
+  this._pagesLoaded++;
   this._limitListeners.changed();
+  this._pagesLoadedListeners.changed();
 }
 
 PaginatedSubscriptionHandle.prototype.done = function() {
-  this._loaded = this._limit;
-  this._loadedListeners.changed();
+  this._ready = true;
+  this._readyListeners.changed();
 }
 
 PaginatedSubscriptionHandle.prototype.reset = function() {
-  this._limit = this.perPage;
+  this._limit = this.initialPages * this.perPage;
+  this._pagesLoaded = this.initialPages;
   this._limitListeners.changed();
+  this._pagesLoadedListeners.changed();
 }
 
 
-Meteor.subscribeWithPagination = function (/*name, arguments, perPage */) {
+Meteor.subscribeWithPagination = function (/*name, arguments, perPage, initialPages */) {
   var args = Array.prototype.slice.call(arguments, 0);
   var lastArg = args.pop();
-  var perPage, cb;
+  var perPage, initialPages, cb;
   if (_.isFunction(lastArg) || _.isObject(lastArg)) {
-    cb = lastArg; 
-    perPage = args.pop();
+    cb = lastArg;
+    if(args.length > 1){
+      initialPages = args.pop();
+      perPage = args.pop();
+    }else{
+      perPage = args.pop();
+    }
   } else {
-    perPage = lastArg;
+    if(args.length > 1){
+      initialPages = lastArg;
+      perPage = args.pop();
+    }else{
+      perPage = lastArg;
+    }
   }
   
-  var handle = new PaginatedSubscriptionHandle(perPage);
+  var handle = new PaginatedSubscriptionHandle(perPage, initialPages);
   
   var argAutorun = Meteor.autorun(function() {
     var ourArgs = _.map(args, function(arg) {
