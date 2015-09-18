@@ -13,12 +13,9 @@ $ meteor add verron:paginated-subscription
 
 ## Usage
 
-This package is very similar to paginated-subscription by (@tmeasday) with couple of differences (see below).
+Current Repo is very similar to [paginated-subscription](https://github.com/percolatestudio/paginated-subscription) by Percolate Studio with couple of tweaks and fixes (see below).
 
 This package makes available a single function `Meteor.paginatedSubscribe`. Like the built in `Meteor.subscribe`, it returns a handle, which should be used to keep track of the state of the subscription:
-
-1. The last argument must be a number, indicating the number of documents per page.
-This can be followed by callback functions in style of `Meteor.subscribe`.
 
 Now you can add ``initialPages`` option in case if you want to load different amount of documents for the first subscribe.
 
@@ -72,5 +69,6 @@ Contributions are heavily encouraged. The obvious things to fix are:
 Please contact me if you want to have a go at these and I'll be happy to help in what ways I can.
 
 ## License 
-This package was originally forked from Percolate Studio, maintained by Tom Coleman (@tmeasday) and refactored by us.
 MIT. (c) Just Bliss, maintained by Ronen Verdi (@v3rron).
+
+This package was originally forked from Percolate Studio, maintained by Tom Coleman (@tmeasday) and refactored by us.
