@@ -21,14 +21,18 @@ This package makes available a single function `Meteor.paginatedSubscribe`. Like
 
 Now you can add ``initialPages`` option in case if you want to load different amount of documents for the first subscribe.
 
-One more API function added ``handle.pagesLoaded`` in order to see how many pages are currently loaded (it's useful if you want to load the same amount of pages next time you visit same route).
+One more API function added ``pagesLoaded()`` in order to see how many pages are currently loaded (it's useful if you want to load the same amount of pages next time you visit same route).
 
 Removed loaded() API function as it didn't make sense (it didn't actually count how many documents were loaded, but was just equal to current limit ).
 As a workaround, this scheme can be used:
 ```js
-var posts = Posts.find({});
-Session.set('postsCount', posts.count());
-return posts;
+Template._name.helpers({
+  posts: function(){
+    var posts = Posts.find({});
+    Session.set('postsCount', posts.count());
+    return posts;
+  }
+});
 ```
 
 Example:
@@ -36,12 +40,24 @@ Example:
 ```js
 // Abstract
 var handle = Meteor.paginatedSubscribe(publishName, publishArguments, options, callback);
+```
+```js
 // Example usage
-var handle = Meteor.paginatedSubscribe('posts', user_id, {
-  perPage: 10, // required
-  initialPages: 2 // optional
-}, function(){ // callback optional
-  alert('publish ready');
+Template._name.onCreated(function(){
+  var tmpl = this;
+  tmpl.handle = Meteor.paginatedSubscribe('posts', user_id, {
+    perPage: 10, // required
+    initialPages: 2 // optional
+  }, function(){ // callback optional
+    alert('publish ready');
+  });
+});
+```
+Or if you use it inside waitOn of Iron-Router
+```js
+Template._name.onCreated(function(){
+  var tmpl = this;
+  tmpl.handle = Iron.controller().waitOn();
 });
 ```
 
@@ -55,9 +71,10 @@ Meteor.publish('posts', function(userId, limit) {
 
 The important part of all this is the `handle`, which has the following API:
 
- - `handle.limit()` - how many have we asked for
- - `handle.ready()` - are we waiting on the server right now?
- - `handle.loadNextPage()` - fetch the next page of results
+ - `handle.limit()` - how many have we asked for (Reactive)
+ - `handle.ready()` - are we waiting on the server right now? (Reactive)
+ - `handle.loadNextPage()` - fetch the next page of results (Non-Reactive)
+ - `handle.pagesLoaded()` - how many pages been loaded so far (Reactive)
 
 The first three functions are reactive and thus can be used to correctly display an 'infinite-scroll' like list of results.
 
