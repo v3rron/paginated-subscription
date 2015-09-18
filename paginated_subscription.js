@@ -3,7 +3,6 @@ PaginatedSubscriptionHandle = function(perPage, initialPages) {
   this.perPage = perPage;
   this.initialPages = initialPages || 1;
   this._ready = false;
-  this._count = 0;
   this._limit = this.perPage * this.initialPages;
   this._pagesLoaded = this.initialPages;
   // Listeners

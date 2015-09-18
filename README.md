@@ -75,6 +75,7 @@ The important part of all this is the `handle`, which has the following API:
  - `handle.ready()` - are we waiting on the server right now? (Reactive)
  - `handle.loadNextPage()` - fetch the next page of results (Non-Reactive)
  - `handle.pagesLoaded()` - how many pages been loaded so far (Reactive)
+ - `handle.reset()` - reset the limit and pagesLoaded to initial state (Reactive)
 
 The first three functions are reactive and thus can be used to correctly display an 'infinite-scroll' like list of results.
 
