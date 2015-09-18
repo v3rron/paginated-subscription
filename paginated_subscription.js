@@ -1,84 +1,88 @@
 PaginatedSubscriptionHandle = function(perPage, initialPages) {
+  var self = this;
   this.perPage = perPage;
   this.initialPages = initialPages || 1;
-  this._pagesLoaded = this.initialPages;
-  this._pagesLoadedListeners = new Tracker.Dependency();
-  this._limit = this.perPage;
-  this._limitListeners = new Tracker.Dependency();
   this._ready = false;
-  this._readyListeners = new Tracker.Dependency();
-}
-
-PaginatedSubscriptionHandle.prototype.ready = function() {
-  this._readyListeners.depend();
-  return this._ready;
-}
-
-PaginatedSubscriptionHandle.prototype.pagesLoaded = function() {
-  this._pagesLoadedListeners.depend();
-  return this._pagesLoaded;
-}
-
-PaginatedSubscriptionHandle.prototype.limit = function() {
-  this._limitListeners.depend();
-  return this._limit;
-}
-
-// deprecated
-PaginatedSubscriptionHandle.prototype.loading = function() {
-  return ! this.ready();
-}
-
-PaginatedSubscriptionHandle.prototype.loadNextPage = function() {
-  this._limit += this.perPage;
-  this._pagesLoaded++;
-  this._limitListeners.changed();
-  this._pagesLoadedListeners.changed();
-}
-
-PaginatedSubscriptionHandle.prototype.done = function() {
-  this._ready = true;
-  this._readyListeners.changed();
-}
-
-PaginatedSubscriptionHandle.prototype.reset = function() {
-  this._limit = this.initialPages * this.perPage;
+  this._count = 0;
+  this._limit = this.perPage * this.initialPages;
   this._pagesLoaded = this.initialPages;
-  this._limitListeners.changed();
-  this._pagesLoadedListeners.changed();
+  // Listeners
+  this._readyListeners = new Tracker.Dependency();
+  this._pagesLoadedListeners = new Tracker.Dependency();
+  this._limitListeners = new Tracker.Dependency();
+
+  this.pagesLoaded = function() {
+    self._pagesLoadedListeners.depend();
+    return self._pagesLoaded;
+  }
+
+  this.limit = function() {
+    self._limitListeners.depend();
+    return self._limit;
+  }
+
+  this.loadNextPage = function() {
+    self._limit += self.perPage;
+    self._pagesLoaded++;
+    self._limitListeners.changed();
+    self._pagesLoadedListeners.changed();
+  }
+
+  this.reset = function() {
+    self._limit = self.initialPages * self.perPage;
+    self._pagesLoaded = self.initialPages;
+    self._limitListeners.changed();
+    self._pagesLoadedListeners.changed();
+  }
+
+  this.ready = function() {
+    self._readyListeners.depend();
+    return self._ready;
+  }
+
+  this.loading = function() {
+    self._ready = false;
+    self._readyListeners.changed();
+  }
+
+  this.done = function() {
+    self._ready = true;
+    self._readyListeners.changed();
+  }
 }
 
 
-Meteor.subscribeWithPagination = function (/*name, arguments, perPage, initialPages */) {
+Meteor.paginatedSubscribe = function (/* name, publishArgs, options, cb */) {
   var args = Array.prototype.slice.call(arguments, 0);
+  
   var lastArg = args.pop();
-  var perPage, initialPages, cb;
-  if (_.isFunction(lastArg) || _.isObject(lastArg)) {
+
+  var options, cb;
+  if (_.isFunction(lastArg)) {
     cb = lastArg;
-    if(args.length > 1){
-      initialPages = args.pop();
-      perPage = args.pop();
-    }else{
-      perPage = args.pop();
-    }
-  } else {
-    if(args.length > 1){
-      initialPages = lastArg;
-      perPage = args.pop();
-    }else{
-      perPage = lastArg;
-    }
+    options = args.pop();
+  } else if(_.isObject(lastArg)) {
+    options = lastArg;
   }
   
-  var handle = new PaginatedSubscriptionHandle(perPage, initialPages);
+  if(!options.perPage)
+    throw 'Missing option: perPage';
+
+  options.initialPages = options.initialPages || 1;
+  
+  var handle = new PaginatedSubscriptionHandle(options.perPage, options.initialPages);
   
   var argAutorun = Meteor.autorun(function() {
     var ourArgs = _.map(args, function(arg) {
       return _.isFunction(arg) ? arg() : arg;
     });
-   
+
     ourArgs.push(handle.limit());
+    
     cb && ourArgs.push(cb);
+
+    handle.loading();
+    
     var subHandle = Meteor.subscribe.apply(this, ourArgs);
     
     // whenever the sub becomes ready, we are done. This may happen right away
